@@ -161,6 +161,18 @@ int main(int argc, char* argv[]) {
                 }
                 break;
             case OP_NOT:
+                /* BITWISE NOT */
+                /* Produces the 1's complement to imput from SR */
+                {
+                    // Destination Register
+                    uint16_t r0 = (instr >> 9) & 0x7;
+
+                    // Source Register
+                    uint16_t r1 = (instr >> 6) & 0x7;
+
+                    reg[r0] = ~reg[r1];
+                    update_flags(r0);
+                }
 
                 break;
             case OP_BR:
