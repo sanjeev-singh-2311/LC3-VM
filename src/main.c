@@ -242,13 +242,47 @@ int main(int argc, char* argv[]) {
                 }
                 break;
             case OP_ST:
+                /* Store instruction */
+                /* Takes value from a SR and stores it directly in memory location PC + offset */
+                {
+                    // Source Register
+                    uint16_t r0 = (instr >> 9) & 0x7;
 
+                    // PCoffset9
+                    uint16_t pc_offset = sign_extend(instr & 0x1FF, 9);
+
+                    mem_write(reg[R_PC] + pc_offset, reg[r0]);
+                }
                 break;
             case OP_STI:
+                /* Store Indirect Instruction */
+                /* Gains the address from other  address and stores the SR there */
+                {
+                    // Source Register
+                    uint16_t r0 = (instr >> 9) & 0x7;
 
+                    // PCoffset9
+                    uint16_t pc_offset = sign_extend(instr & 0x1FF, 9);
+
+                    mem_write(mem_read(reg[R_PC] + pc_offset), reg[r0]);
+                }
                 break;
             case OP_STR:
+                /* Store Register Instruction */
+                /* Takes value from a Source register and stores it in memory location  */
+                /* BASE_REGISTER + offset6 */
+                {
+                    // Source Register
+                    uint16_t r0 = (instr >> 9) & 0x7;
 
+                    // Base register
+                    uint16_t r1 = (instr >> 6) & 0x7;
+
+                    // offset6
+                    uint16_t offset = sign_extend(instr & 0x3F, 6);
+
+                    mem_write(reg[r1] + offset, reg[r0]);
+                }
                 break;
             case OP_TRAP:
 
