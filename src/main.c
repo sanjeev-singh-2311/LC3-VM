@@ -173,27 +173,61 @@ int main(int argc, char* argv[]) {
 
                 break;
             case OP_LD:
+                /* Load Operation Takes a DR and offset */
+                /* Loads into DR from MEMORY[PC_VALUE + offset] */
+                {
+                    uint16_t r0        = (instr >> 9) & 0x7;
+                    uint16_t pc_offset = sign_extend(instr & 0x1FF, 9);
 
+                    reg[r0] = mem_read(reg[R_PC] + pc_offset);
+                    update_flags(r0);
+                }
                 break;
             case OP_LDI:
                 /* Load Indirect */
                 /* Takes a DR and a PCoffset9 of 9 bits */
-                /* The value is taken from make memory location of R_PC + PCoffset9
-                 * and put into DR
+                /* The value is taken from make memory location stored in register number R_PC +
+                 * PCoffset9 and put into DR
                  */
                 {
                     uint16_t r0        = (instr >> 9) & 0x7; // Bits 9 till 11;
                     uint16_t pc_offset = sign_extend(instr & 0x1FF, 9);
 
-                    reg[r0] = mem_read(reg[R_PC + pc_offset]);
+                    reg[r0] = mem_read(mem_read(reg[R_PC] + pc_offset));
                     update_flags(r0);
                 }
                 break;
             case OP_LDR:
+                /* Load Register */
+                /* Loads the value from a loction in memory into a DR */
+                /* The loction is calculated as MEMORY[SOME_BASE_REGISTER + some_offset] */
+                {
+                    // Destination Register
+                    uint16_t r0 = (instr >> 9) & 0x7;
 
+                    // Source Register
+                    uint16_t r1 = (instr >> 6) & 0x7;
+
+                    // the offset of 6 bits
+                    uint16_t offset = sign_extend(instr & 0x3F, 6);
+
+                    reg[r0] = mem_read(reg[r1] + offset);
+                    update_flags(r0);
+                }
                 break;
             case OP_LEA:
+                /* Load effective address */
+                /* Loads value from memory in DR from loaction PCoffset9 */
+                {
+                    // Destination Register
+                    uint16_t r0 = (instr >> 9) & 0x7;
 
+                    // offset
+                    uint16_t pc_offset = sign_extend(instr & 0x1FF, 9);
+
+                    reg[r0] = pc_offset;
+                    update_flags(r0);
+                }
                 break;
             case OP_ST:
 
