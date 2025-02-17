@@ -176,13 +176,44 @@ int main(int argc, char* argv[]) {
 
                 break;
             case OP_BR:
+                /* Branch Operation */
+                /* Takes a n, p and z bit signifying the branch condition */
+                /* If the branch logic is correct, moves the PC to the PC + PCoffset9 */
+                {
+                    // The 9 bit PC Offset
+                    uint16_t pc_offset = sign_extend(instr & 0x1FF, 9);
 
+                    // The Conditional Flag result of 3 bit as npz
+                    uint16_t cond = (instr >> 9) & 0x7;
+
+                    if (cond & reg[R_COND])
+                        reg[R_PC] = reg[R_PC] + pc_offset;
+                }
                 break;
             case OP_JMP:
-
+                /* Jump Instruction */
+                /* Moves the PC to the given value in the base register number bit 6 to 8 */
+                /* Acts as RETURN if the given bits are 111 */
+                {
+                    uint16_t r0 = (instr >> 6) & 0x7;
+                    reg[R_PC]   = reg[r0];
+                }
                 break;
             case OP_JSR:
-
+                /* Jump Register Instruction */
+                /* First store the value of PC in R7; */
+                /* Based on a flag value, either increment the value in PC by a PCoffset11
+                 * or replace it with value in another register */
+                {
+                    uint16_t flag = (instr >> 11) & 1;
+                    reg[R_R7]     = reg[R_PC];
+                    if (flag) {
+                        reg[R_PC] += sign_extend(instr & 0x7FF, 11);
+                    } else {
+                        uint16_t r0 = (instr >> 6) & 0x7;
+                        reg[R_PC]   = reg[r0];
+                    }
+                }
                 break;
             case OP_LD:
                 /* Load Operation Takes a DR and offset */
