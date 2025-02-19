@@ -336,16 +336,70 @@ int main(int argc, char* argv[]) {
 
                     switch (instr & 0xFF) {
                         case TRAP_GETC:
+                            // Read a single char in R0 and update flag
+                            {
+                                uint16_t c = (uint16_t)getchar();
+                                reg[R_R0]  = c;
+                                update_flags(R_R0);
+                            }
                             break;
                         case TRAP_OUT:
+                            /* Used to output a single char stored in R0 to the console */
+                            {
+                                char c = (char)reg[R_R0];
+                                putc(c, stdout);
+                            }
                             break;
                         case TRAP_PUTS:
+                            /* It is used to output a null terminated string */
+                            /* In order to print the string, we need to give the string
+                             * to the trap
+                             */
+                            /* This is done by storing the address to the string in R0 */
+                            {
+                                uint16_t* c = memory + reg[R_R0];
+                                while (*c) {
+                                    putc((char)*c, stdout);
+                                    c++;
+                                }
+                            }
                             break;
                         case TRAP_IN:
+                            // Puts a message to read adn reads a char from input
+                            // The input char is echoed on teh console and stdout flushed
+                            // The char is stored in R0
+                            {
+                                puts("Enter a character: ");
+                                char c = getchar();
+                                putc(c, stdout);
+                                fflush(stdout);
+                                reg[R_R0] = (uint16_t)c;
+                                update_flags(R_R0);
+                            }
                             break;
                         case TRAP_PUTSP:
+                            /* Outputs a null terminated string to console */
+                            /* The address of the first char is stored in R0 */
+                            /* Each block contains two characters in buts 0 to 7 and 8 to 15 */
+                            {
+                                uint16_t* c = memory + reg[R_R0];
+                                while (*c) {
+                                    char c1 = *c & 0xFF;
+                                    putc(c1, stdout);
+                                    char c2 = *c >> 8;
+                                    if (c2)
+                                        putc(c2, stdout);
+                                    c++;
+                                }
+                            }
                             break;
                         case TRAP_HALT:
+                            // Halts the program
+                            {
+                                puts("HALT");
+                                fflush(stdout);
+                                running = 0;
+                            }
                             break;
                     }
                 }
