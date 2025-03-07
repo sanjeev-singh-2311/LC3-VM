@@ -32,6 +32,13 @@ enum {
 };
 uint16_t reg[R_COUNT];
 
+/* In order to capture the keyboard status and data
+we use two memory mapped registers */
+enum {
+    MR_KBSR = 0xFE00, /* Keyboard Status Registers */
+    MR_KBDR = 0xFE02  /* Keyboard Data register */
+};
+
 /* LC-3 has 16 opcodes */
 /* each instruction is 16 bit long */
 /* the first 4 bits (log2(16)) is the opcode */
@@ -126,6 +133,25 @@ int read_image(const char* path) {
     read_image_file(f);
     fclose(f);
     return 1;
+}
+
+/* We can not read directly from memory */
+/* we instead use getter and setter to check and handle */
+/* keyboard events */
+void mem_write(uint16_t addr, uint16_t val) {
+    memory[addr] = val;
+}
+
+uint16_t mem_read(uint16_t addr) {
+    if (addr == MR_KBSR) {
+        if (check_key()) {
+            memory[MR_KBSR] = (1 << 15);
+            memory[MR_KBDR] = getchar();
+        } else {
+            memory[MR_KBSR] = 0;
+        }
+    }
+    return memory[addr];
 }
 
 int main(int argc, char* argv[]) {
