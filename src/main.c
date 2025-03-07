@@ -142,6 +142,9 @@ void mem_write(uint16_t addr, uint16_t val) {
     memory[addr] = val;
 }
 
+// Declaration for check_key
+uint16_t check_key();
+
 uint16_t mem_read(uint16_t addr) {
     if (addr == MR_KBSR) {
         if (check_key()) {
@@ -154,7 +157,41 @@ uint16_t mem_read(uint16_t addr) {
     return memory[addr];
 }
 
+/* Linux platform specific function to handle keyboard inputs and such */
+struct termios original_tio;
+
+void disable_input_buffering() {
+    tcgetattr(STDIN_FILENO, &original_tio);
+    struct termios new_tio = original_tio;
+    new_tio.c_lflag &= ~ICANON & ~ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+}
+
+void restore_input_buffering() {
+    tcsetattr(STDIN_FILENO, TCSANOW, &original_tio);
+}
+
+uint16_t check_key() {
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(STDIN_FILENO, &readfds);
+
+    struct timeval timeout;
+    timeout.tv_sec  = 0;
+    timeout.tv_usec = 0;
+    return select(1, &readfds, NULL, NULL, &timeout) != 0;
+}
+
+// Handle Interrupt
+void handle_interrupt(int signal) {
+    restore_input_buffering();
+    printf("\n");
+    exit(-2);
+}
+
 int main(int argc, char* argv[]) {
+    signal(SIGINT, handle_interrupt);
+    disable_input_buffering();
     /* Handle command line inputs */
     if (argc < 2) {
         printf("lc3 [image-file1]...\n");
