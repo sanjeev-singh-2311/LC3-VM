@@ -96,6 +96,38 @@ void update_flags(uint16_t r) {
     }
 }
 
+/* LC-3 programs are Big Endian so we need to swap the first and second half of each 16 bit word */
+uint16_t swap16(uint16_t s) {
+    return (s << 8) | (s >> 8);
+}
+
+/* Loading Image Files */
+void read_image_file(FILE* file) {
+    /* Origin is where the image will be placed in memory */
+    uint16_t origin;
+    fread(&origin, sizeof(origin), 1, file);
+    origin = swap16(origin);
+
+    uint16_t max_read = MEMORY_MAX - origin;
+    uint16_t* p       = memory + origin;
+    size_t read       = fread(p, sizeof(origin), max_read, file);
+
+    while (read-- > 0) {
+        *p = swap16(*p);
+        p++;
+    }
+}
+
+/* function to take a path as string and read the image file */
+int read_image(const char* path) {
+    FILE* f = fopen(path, "rb");
+    if (!f)
+        return 0;
+    read_image_file(f);
+    fclose(f);
+    return 1;
+}
+
 int main(int argc, char* argv[]) {
     /* Handle command line inputs */
     if (argc < 2) {
