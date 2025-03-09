@@ -257,10 +257,10 @@ int main(int argc, char* argv[]) {
                     uint16_t imm_flag = (instr >> 5) & 0x1;
                     if (imm_flag) {
                         uint16_t imm5 = sign_extend(instr & 0x1F, 5);
-                        reg[r0]       = reg[r1] + imm5;
+                        reg[r0]       = reg[r1] & imm5;
                     } else {
                         uint16_t r2 = (instr & 0x7);
-                        reg[r0]     = reg[r1] + reg[r2];
+                        reg[r0]     = reg[r1] & reg[r2];
                     }
                     update_flags(r0);
                 }
@@ -373,7 +373,7 @@ int main(int argc, char* argv[]) {
                     // offset
                     uint16_t pc_offset = sign_extend(instr & 0x1FF, 9);
 
-                    reg[r0] = pc_offset;
+                    reg[r0] = reg[R_PC] + pc_offset;
                     update_flags(r0);
                 }
                 break;
